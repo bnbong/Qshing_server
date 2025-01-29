@@ -3,19 +3,39 @@
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
+from datetime import datetime
+import logging
+
 from . import APIRouter
+from fastapi import Request
+
+import src.qshing_server.service.phishing_analyzer as crud
+from src.qshing_server.dto.base import ResponseSchema
+from src.qshing_server.dto.phishing_schema import (
+    PhishingDetectionRequest,
+    PhishingDetectionResponse,
+)
+
+logger = logging.getLogger("main")
 
 router = APIRouter(prefix="/phishing-detection")
 
 
 @router.get("/")
 async def determine():
-    """디버깅용 엔드포인트, 추후 제거"""
+    logger.info("Debug endpoint accessed")
     return {"message": "Phshing site detection with url"}
 
 
-@router.post("/analyze")
-async def analyze():
-    """피싱 사이트 판별 분석 엔드포인트"""
-    # TODO: 분석 로직 구현
-    return {"result": "phishing", "confidence": 0.95}
+@router.post("/analyze", response_model=ResponseSchema[PhishingDetectionResponse])
+def analyze(data: PhishingDetectionRequest, request: Request):
+    print(data.url)
+    logger.info(f"Phishing analysis requested for URL: {data.url}")
+    result = crud.analyze(data.url, request)
+    response = ResponseSchema(
+        timestamp=datetime.now().isoformat(),
+        message="SUCCESS",
+        data=result,
+    )
+    logger.info(f"Analysis completed for URL: {data.url}")
+    return response

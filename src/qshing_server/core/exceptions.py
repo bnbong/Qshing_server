@@ -9,3 +9,11 @@ class BackendExceptions(Exception):
     """
 
     pass
+
+
+class AIException(Exception):
+    """
+    Exceptions occurs from AI operations
+    """
+
+    pass

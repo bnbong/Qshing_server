@@ -3,14 +3,38 @@
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
+import logging
+from datetime import datetime
+
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from starlette.middleware.cors import CORSMiddleware
 
-from qshing_server.core.config import settings
-from qshing_server.api import api_router
+from src.qshing_server.core.config import settings
+from src.qshing_server.api import api_router
+from src.qshing_server.service.model.model_manager import PhishingDetection
+from src.qshing_server.utils.logging import Logger
+
+logger = Logger(file_path=f'./log/{datetime.now().strftime("%Y-%m-%d")}', name="main")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        logger.info("Starting server...")
+
+        logger.info("Loading model...")
+        app.state.model = PhishingDetection(model_path=settings.MODEL_PATH)
+        yield
+    finally:
+        logger.info("Shutting down server...")
+        app.state.model = None
+        logger.info("Model unloaded")
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
+    lifespan=lifespan,
 )
 
 if settings.all_cors_origins:
@@ -21,7 +45,6 @@ if settings.all_cors_origins:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
 
 
 @app.get("/")

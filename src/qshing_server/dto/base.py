@@ -6,7 +6,7 @@
 from pydantic import BaseModel, Field
 from typing import Generic, TypeVar
 
-from qshing_server.utils.enums import ResponseMessage
+from src.qshing_server.utils.enums import ResponseMessage
 
 T = TypeVar("T")
 

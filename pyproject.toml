@@ -9,6 +9,16 @@ dependencies = [
     "pydantic-settings>=2.7.1",
     "uvicorn[standard]>=0.34.0",
     "fastapi>=0.115.7",
+    "torch>=2.5.1",
+    "torchvision>=0.20.1",
+    "torchaudio>=2.5.1",
+    "transformers>=4.48.1",
+    "selenium>=4.28.1",
+    "webdriver-manager>=4.0.2",
+    "beautifulsoup4>=4.12.3",
+    "tqdm>=4.67.1",
+    "html2text>=2024.2.26",
+    "langdetect>=1.0.9",
 ]
 requires-python = "==3.12.*"
 readme = "README.md"

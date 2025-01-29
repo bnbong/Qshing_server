@@ -1,6 +1,9 @@
 # AI 모델 체크포인트 파일
 *.pt
 
+# 주피터 노트북 (임시)
+*.ipynb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

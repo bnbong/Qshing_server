@@ -3,6 +3,7 @@
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
+import os
 import secrets
 import warnings
 from typing import Annotated, Any, Literal, Optional
@@ -33,9 +34,9 @@ class Settings(BaseSettings):
 
     CLIENT_ORIGIN: str = ""  # for web playground application (not sure)
 
-    BACKEND_CORS_ORIGINS: Annotated[
-        list[AnyUrl] | str, BeforeValidator(parse_cors)
-    ] = []
+    BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = (
+        []
+    )
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -45,6 +46,10 @@ class Settings(BaseSettings):
         ]
 
     PROJECT_NAME: str = "Qshing Server"
+    MODEL_NAME: str = "best_acc_model.pt"
+    MODEL_PATH: str = os.path.join(
+        os.path.dirname(__file__), "..", "service", "model", MODEL_NAME
+    )
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":

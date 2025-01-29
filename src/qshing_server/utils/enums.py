@@ -15,4 +15,3 @@ class ResponseMessage(str, Enum):
 
     SUCCESS = "SUCCESS"
     ERROR = "ERROR"
-

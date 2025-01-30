@@ -34,9 +34,8 @@ class PhishingDetection:
         input_data = preprocessor.preprocess()
         print(input_data)
 
-        # DataLoader를 사용하여 배치 처리
         dataloader = DataLoader(input_data, batch_size=1, shuffle=False)
-        return next(iter(dataloader))  # 첫 번째 배치 반환
+        return next(iter(dataloader))
 
     def predict(self, url: str):
         logger.info(f"Predicting URL: {url}")
@@ -48,4 +47,5 @@ class PhishingDetection:
         predicted_label = (y_prob >= 0.5).long()
 
         logger.info(f"Prediction result: {predicted_label}")
-        return {True, 0.95}
+
+        return {"result": predicted_label, "confidence": y_prob}

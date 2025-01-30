@@ -84,21 +84,23 @@ class DataPreprocessor:
         return self.url_tokenizer.tokenize(urls)
 
     def _tokenize_content(self, contents):
-        tokens = ["[CLS]"]
-        for sentences in tqdm(contents, desc="content tokenization"):
-            token = []
-            for idx, s in enumerate(sentences):
-                if idx != 0:
-                    token.append("[SEP]")
-                token.extend(s)
-            token = "".join(token)
-            tokens.append(token)
+        processed_contents = []
+        for content in tqdm(contents, desc="content preprocessing"):
+            cleaned_content = re.sub(r"[^A-Za-z0-9\s.,!?;:]", "", content)
+            cleaned_content = re.sub(r"\s+", " ", cleaned_content).strip()
+
+            if cleaned_content:
+                processed_contents.append(cleaned_content)
+
+        combined_text = " ".join(processed_contents)
 
         tokenized_output = self.html_tokenizer(
-            tokens,
-            return_tensors="pt",
+            combined_text,
             padding="max_length",
-            max_length=self.max_length,
             truncation=True,
+            max_length=self.max_length,
+            return_tensors="pt",
+            add_special_tokens=True,
         )
+
         return tokenized_output

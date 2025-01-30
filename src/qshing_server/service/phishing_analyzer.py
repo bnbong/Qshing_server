@@ -22,4 +22,4 @@ def analyze(
     model = request.app.state.model
     result = model.predict(url)
     logger.info(f"Analysis completed for URL: {url}")
-    return response_model.model_validate(result.__dict__)
+    return response_model.model_validate(result)

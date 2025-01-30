@@ -8,9 +8,70 @@ CNN + BERT multimodal Phishing Detection Server 입니다.
 - FastAPI 0.115.7 + Pydantic 2.7.1 + Uvicorn 0.34.0
 - Docker
 
+## Project Structure
+
+```
+.
+├── CHANGELOG.md
+├── Dockerfile
+├── README.md
+├── log (auto-generated)
+├── pdm.lock
+├── pyproject.toml
+├── requirements.txt
+├── scripts
+│   ├── fetch-dependency.sh
+│   ├── format.sh
+│   └── lint.sh
+├── src
+│   └── qshing_server
+│       ├── __init__.py
+│       ├── api
+│       │   ├── __init__.py
+│       │   └── phishing_routers.py
+│       ├── core
+│       │   ├── __init__.py
+│       │   ├── config.py
+│       │   └── exceptions.py
+│       ├── dto
+│       │   ├── __init__.py
+│       │   ├── base.py
+│       │   └── phishing_schema.py
+│       ├── main.py
+│       ├── py.typed
+│       ├── service
+│       │   ├── __init__.py
+│       │   ├── model
+│       │   │   ├── __init__.py
+│       │   │   ├── best_acc_model.pt (**해당 폴더 위치에 모델 체크포인트 파일 필수**)
+│       │   │   ├── model_manager.py
+│       │   │   ├── preprocessor.py
+│       │   │   ├── qbert.py
+│       │   │   └── tokenizer.py
+│       │   ├── parser
+│       │   │   ├── __init__.py
+│       │   │   └── html_loader.py
+│       │   └── phishing_analyzer.py
+│       └── utils
+│           ├── __init__.py
+│           ├── enums.py
+│           └── logging.py
+└── tests
+```
+
 ## Setup
 
-### 0. 가상 환경 설정
+### 0. 프로젝트 로컬 설치 & 가상 환경 설정
+
+저장소를 clone 합니다.
+
+```bash
+git clone https://github.com/capston-qrcode/Qshing_server.git
+```
+
+설치를 완료하면 `src/qshing_server/service/model` 폴더 위치에 ai 모델 파일을 __반드시__ 넣어주세요.
+
+<br>
 
 로컬에 Python 3.12 이상 버전이 설치되어 있어야 합니다.
 
@@ -52,6 +113,7 @@ pdm install -G dev
 프로젝트 루트에 `.env.dev` 파일의 특정 항목을 수정합니다.
 
 - `SECRET_KEY` : 32자 이상의 랜덤 문자열
+- `MODEL_NAME` : 모델 파일 이름
 
 수정 이후 다음 명령어를 실행합니다.
 

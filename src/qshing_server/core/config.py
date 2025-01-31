@@ -51,6 +51,9 @@ class Settings(BaseSettings):
         os.path.dirname(__file__), "..", "service", "model", MODEL_NAME
     )
 
+    HTML_LOAD_TIMEOUT: int = 30  # seconds
+    HTML_LOAD_RETRIES: int = 3
+
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
             message = (

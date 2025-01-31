@@ -3,49 +3,50 @@
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
-import torch
-import torch.nn as nn
 import logging
-from torch.utils.data import DataLoader
+from typing import Any
+
+import torch
+from transformers import BertTokenizer  # type: ignore
 
 from src.qshing_server.core.exceptions import AIException
 from src.qshing_server.service.model.preprocessor import DataPreprocessor
 from src.qshing_server.service.model.qbert import QsingBertModel
+from src.qshing_server.service.model.tokenizer import QbertUrlTokenizer
+from src.qshing_server.service.parser.html_loader import HTMLLoader
 
 logger = logging.getLogger("main")
 
 
-class PhishingDetection:
+class PhishingDetector:
     def __init__(self, model_path: str):
-        self.device = torch.device("cpu")
-        self.model = QsingBertModel()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = QsingBertModel().to(self.device)
+
         try:
-            save_state = torch.load(model_path, map_location=self.device)
-            self.model.load_state_dict(save_state["model"])
-            self.model.to(self.device)
+            checkpoint = torch.load(model_path, map_location=self.device)
+            self.model.load_state_dict(checkpoint["model"])
             self.model.eval()
             logger.info("Model loaded successfully")
         except Exception as e:
             logger.error(f"Failed to load model: {str(e)}")
             raise AIException(e)
 
-    def __to_tensor(self, url: str):
-        preprocessor = DataPreprocessor(url)
-        input_data = preprocessor.preprocess()
-        print(input_data)
+        self.url_tokenizer = QbertUrlTokenizer()
+        self.bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        self.html_loader = HTMLLoader.get_instance()
 
-        dataloader = DataLoader(input_data, batch_size=1, shuffle=False)
-        return next(iter(dataloader))
-
-    def predict(self, url: str):
+    def predict(self, url: str) -> dict[str, Any]:
         logger.info(f"Predicting URL: {url}")
-        tensor_input = self.__to_tensor(url)
+
+        html = self.html_loader.load(url)
+        if not html:
+            return {"result": None, "confidence": None}
+
+        preprocessor = DataPreprocessor(url, html)
+        inputs = preprocessor.preprocess(self.device)
 
         with torch.no_grad():
-            y_hat, y_prob = self.model(tensor_input)
+            _, prob = self.model(inputs)
 
-        predicted_label = (y_prob >= 0.5).long()
-
-        logger.info(f"Prediction result: {predicted_label}")
-
-        return {"result": predicted_label, "confidence": y_prob}
+        return {"result": float(prob) >= 0.5, "confidence": float(prob)}

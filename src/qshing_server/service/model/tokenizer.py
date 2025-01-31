@@ -6,12 +6,12 @@
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
 from collections import Counter
-from random import random
 from itertools import chain
+from random import random
 from typing import Any
-from tqdm import tqdm  # type: ignore
 
 import torch
+from tqdm import tqdm  # type: ignore
 
 
 class QbertUrlTokenizer:

@@ -3,12 +3,13 @@
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
-from typing import Type, Optional, Any
-from fastapi import Request
 import logging
+from typing import Any, Optional, Type
 
-from src.qshing_server.dto.phishing_schema import PhishingDetectionResponse
+from fastapi import Request
+
 from src.qshing_server.core.config import settings
+from src.qshing_server.dto.phishing_schema import PhishingDetectionResponse
 
 logger = logging.getLogger("main")
 
@@ -19,7 +20,12 @@ def analyze(
     response_model: Type[PhishingDetectionResponse] = PhishingDetectionResponse,
 ) -> Optional[Any]:
     logger.info(f"Analyzing URL: {url}")
-    model = request.app.state.model
-    result = model.predict(url)
-    logger.info(f"Analysis completed for URL: {url}")
-    return response_model.model_validate(result)
+    detector = request.app.state.model
+    result = detector.predict(url)
+
+    if result["confidence"] is not None:
+        logger.info(f"Analysis completed for URL: {url}")
+        return response_model.model_validate(result)
+    else:
+        logger.error(f"Failed to analyze URL: {url}")
+        return response_model.model_validate({"result": False, "confidence": 0.0})

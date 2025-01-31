@@ -19,6 +19,7 @@ dependencies = [
     "tqdm>=4.67.1",
     "html2text>=2024.2.26",
     "langdetect>=1.0.9",
+    "bs4>=0.0.2",
 ]
 requires-python = "==3.12.*"
 readme = "README.md"
@@ -35,3 +36,26 @@ dev = [
 
 [tool.pdm]
 distribution = false
+
+[tool.mypy]
+explicit_package_bases = true
+namespace_packages = true
+ignore_missing_imports = true
+plugins = [
+    "pydantic.mypy"
+]
+disable_error_code = [
+    "annotation-unchecked",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "torch.*",
+    "selenium.*",
+    "webdriver_manager.*",
+    "html2text.*",
+    "transformers.*",
+    "tqdm.*",
+    "langdetect.*"
+]
+ignore_missing_imports = true

@@ -3,14 +3,13 @@
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
-import re
-import torch
 import logging
-from tqdm import tqdm  # type: ignore
+import re
 
-from transformers import BertTokenizer  # type: ignore
+import torch
 from html2text import HTML2Text
 from langdetect import detect  # type: ignore
+from transformers import BertTokenizer  # type: ignore
 
 from src.qshing_server.service.model.tokenizer import QbertUrlTokenizer
 from src.qshing_server.service.parser.html_loader import HTMLLoader
@@ -36,71 +35,46 @@ class MultimodalDataset(torch.utils.data.Dataset):
 
 
 class DataPreprocessor:
-    def __init__(self, url: str):
-        self.html_tokenizer = BertTokenizer.from_pretrained(
-            "bert-base-uncased", use_fast=True
-        )
+    def __init__(self, url: str, html: str):
+        self.url = url
+        self.html = html
+        self.html_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         self.url_tokenizer = QbertUrlTokenizer()
         self.max_length = 512
-        self.urls, self.contents = self.__init_data(url)
 
-    def __init_data(self, url: str):
-        urls, html = HTMLLoader.load(url)
+    def preprocess(self, device: str = "cpu"):
         converter = HTML2Text()
         converter.ignore_links = True
         converter.ignore_images = True
         converter.ignore_tables = True
 
-        content = converter.handle(html)
+        content = converter.handle(self.html)
         sentences = re.split(r"(?<=[.!?]) +", content)
 
         contents = []
         for s in sentences:
             try:
-                if detect(s) == "en":
+                if detect(s) == "en":  # 영어로 되어 있는 사이트만 분석.
                     contents.append(s)
             except:
-                pass
+                continue
 
-        return urls, contents
-
-    def preprocess(self):
-        self.urls = self._tokenize_url(self.urls)
-        self.contents = self._tokenize_content(self.contents)
-
-        print(
-            self.urls["input_ids"].isnan().any(),
-            self.urls["attention_mask"].isnan().any(),
-        )
-        print(
-            self.contents["input_ids"].isnan().any(),
-            self.contents["attention_mask"].isnan().any(),
-        )
-
-        input_data = MultimodalDataset(self.urls, self.contents)
-        return input_data
-
-    def _tokenize_url(self, urls):
-        return self.url_tokenizer.tokenize(urls)
-
-    def _tokenize_content(self, contents):
-        processed_contents = []
-        for content in tqdm(contents, desc="content preprocessing"):
-            cleaned_content = re.sub(r"[^A-Za-z0-9\s.,!?;:]", "", content)
-            cleaned_content = re.sub(r"\s+", " ", cleaned_content).strip()
-
-            if cleaned_content:
-                processed_contents.append(cleaned_content)
-
-        combined_text = " ".join(processed_contents)
-
-        tokenized_output = self.html_tokenizer(
-            combined_text,
-            padding="max_length",
-            truncation=True,
-            max_length=self.max_length,
+        text = "[CLS]" + "[SEP]".join(contents)
+        html_tokens = self.html_tokenizer(
+            text,
             return_tensors="pt",
-            add_special_tokens=True,
+            padding="max_length",
+            max_length=self.max_length,
+            truncation=True,
         )
 
-        return tokenized_output
+        url_tokens = self.url_tokenizer.tokenize(
+            [[self.url]], max_length=self.max_length
+        )
+
+        return {
+            "url_input_ids": url_tokens["input_ids"].to(device),
+            "url_attention_mask": url_tokens["attention_mask"].to(device),
+            "html_input_ids": html_tokens["input_ids"].to(device),
+            "html_attention_mask": html_tokens["attention_mask"].to(device),
+        }

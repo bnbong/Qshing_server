@@ -3,8 +3,9 @@
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
-from pydantic import BaseModel, Field
 from typing import Generic, TypeVar
+
+from pydantic import BaseModel, Field
 
 from src.qshing_server.utils.enums import ResponseMessage
 

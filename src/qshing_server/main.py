@@ -3,16 +3,15 @@
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
-import logging
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import FastAPI
-from contextlib import asynccontextmanager
 from starlette.middleware.cors import CORSMiddleware
 
-from src.qshing_server.core.config import settings
 from src.qshing_server.api import api_router
-from src.qshing_server.service.model.model_manager import PhishingDetection
+from src.qshing_server.core.config import settings
+from src.qshing_server.service.model.model_manager import PhishingDetector
 from src.qshing_server.utils.logging import Logger
 
 logger = Logger(file_path=f'./log/{datetime.now().strftime("%Y-%m-%d")}', name="main")
@@ -24,7 +23,7 @@ async def lifespan(app: FastAPI):
         logger.info("Starting server...")
 
         logger.info("Loading model...")
-        app.state.model = PhishingDetection(model_path=settings.MODEL_PATH)
+        app.state.model = PhishingDetector(model_path=settings.MODEL_PATH)
         yield
     finally:
         logger.info("Shutting down server...")

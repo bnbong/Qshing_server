@@ -132,3 +132,39 @@ uvicorn src.qshing_server.main:app --reload
 # PDM 사용 시
 pdm run uvicorn src.qshing_server.main:app --reload
 ```
+
+### 4. API 테스트
+
+❗️ 로컬에서 서버 application을 구동할 시 주의가 필요합니다. ❗️
+
+서버 동작 구조가 컨테이너 환경에서 구동하는 것이 아닌 `로컬의 웹 엔진(컴퓨터에 깔려 있는 웹 드라이버, Chrome 등)`을 사용하여 사이트 요소를 크롤링 하기 때문에 실제 피싱 사이트에 대한 분석 요청은 ___지양___ 하는 것이 좋습니다.
+
+배포 환경에서는 클라우드 - 컨테이너 환경에서 구동되기 때문에 실제 피싱 사이트에 대한 분석은 추후 배포 완료 시 공개되는 도메인을 통해 테스트 가능합니다.
+
+피싱 사이트 분석에 사용하는 엔드포인트는 다음과 같습니다 :
+
+```bash
+# URL
+GET "<domain>/phishing-detection/analyze"
+```
+
+#### request
+
+```json
+{
+  "url": "string"
+}
+```
+
+#### response
+
+```json
+{
+  "timestamp": "string",
+  "message": "string",
+  "data": {
+    "result": true,  // 피싱 사이트 여부
+    "confidence": 0.0  // 피싱 사이트 확률 (신뢰도)
+  }
+}
+```

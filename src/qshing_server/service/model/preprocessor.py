@@ -6,7 +6,6 @@
 import logging
 import re
 
-import torch
 from html2text import HTML2Text
 from langdetect import detect
 from torch import device
@@ -15,23 +14,6 @@ from transformers import BertTokenizer
 from src.qshing_server.service.model.tokenizer import QbertUrlTokenizer
 
 logger = logging.getLogger("main")
-
-
-class MultimodalDataset(torch.utils.data.Dataset):
-    def __init__(self, urls, contents):
-        self.urls = urls
-        self.contents = contents
-
-    def __len__(self):
-        return len(self.urls)
-
-    def __getitem__(self, idx):
-        return {
-            "url_input_ids": self.urls["input_ids"].squeeze(0),
-            "url_attention_mask": self.urls["attention_mask"].squeeze(0),
-            "html_input_ids": self.contents["input_ids"].squeeze(0),
-            "html_attention_mask": self.contents["attention_mask"].squeeze(0),
-        }
 
 
 class DataPreprocessor:

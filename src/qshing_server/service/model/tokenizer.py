@@ -11,7 +11,7 @@ from random import random
 from typing import Any
 
 import torch
-from tqdm import tqdm  # type: ignore
+from tqdm import tqdm
 
 
 class QbertUrlTokenizer:

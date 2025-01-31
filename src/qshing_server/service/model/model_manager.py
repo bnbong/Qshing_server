@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 import torch
-from transformers import BertTokenizer  # type: ignore
+from transformers import BertTokenizer
 
 from src.qshing_server.core.exceptions import AIException
 from src.qshing_server.service.model.preprocessor import DataPreprocessor

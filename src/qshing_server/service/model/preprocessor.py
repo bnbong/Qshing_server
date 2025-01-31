@@ -8,11 +8,11 @@ import re
 
 import torch
 from html2text import HTML2Text
-from langdetect import detect  # type: ignore
-from transformers import BertTokenizer  # type: ignore
+from langdetect import detect
+from torch import device
+from transformers import BertTokenizer
 
 from src.qshing_server.service.model.tokenizer import QbertUrlTokenizer
-from src.qshing_server.service.parser.html_loader import HTMLLoader
 
 logger = logging.getLogger("main")
 
@@ -42,7 +42,7 @@ class DataPreprocessor:
         self.url_tokenizer = QbertUrlTokenizer()
         self.max_length = 512
 
-    def preprocess(self, device: str = "cpu"):
+    def preprocess(self, device: device):
         converter = HTML2Text()
         converter.ignore_links = True
         converter.ignore_images = True

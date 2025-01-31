@@ -14,6 +14,7 @@ from src.qshing_server.dto.phishing_schema import (
     PhishingDetectionRequest,
     PhishingDetectionResponse,
 )
+from src.qshing_server.utils.enums import ResponseMessage
 
 from . import APIRouter
 
@@ -30,7 +31,7 @@ async def determine():
     result = {"status": "ok", "message": "Phshing site detection with url"}
     response: ResponseSchema[dict] = ResponseSchema(
         timestamp=datetime.now().isoformat(),
-        message="SUCCESS",
+        message=ResponseMessage.SUCCESS,
         data=result,
     )
     return response
@@ -40,11 +41,12 @@ async def determine():
 def analyze(data: PhishingDetectionRequest, request: Request):
     """
     Phishing site detection 엔드포인트
+    # TODO : 에러 처리 추가
     """
     result = crud.analyze(data.url, request)
     response: ResponseSchema[PhishingDetectionResponse] = ResponseSchema(
         timestamp=datetime.now().isoformat(),
-        message="SUCCESS",
+        message=ResponseMessage.SUCCESS,
         data=result,
     )
     return response

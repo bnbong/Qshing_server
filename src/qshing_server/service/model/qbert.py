@@ -7,7 +7,7 @@
 # --------------------------------------------------------------------------
 import torch
 import torch.nn as nn
-from transformers import MobileBertModel  # type: ignore
+from transformers import MobileBertModel
 
 
 class UrlCnnModel(nn.Module):

@@ -145,7 +145,7 @@ pdm run uvicorn src.qshing_server.main:app --reload
 
 ```bash
 # URL
-GET "<domain>/phishing-detection/analyze"
+POST "<domain>/phishing-detection/analyze"
 ```
 
 #### request

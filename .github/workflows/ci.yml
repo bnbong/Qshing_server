@@ -11,20 +11,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Git
+      - name: Fetch Bucket
         run: |
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "GitHub Actions"
-      - name: Configure OCI Git Credentials
-        run: |
-          git config --global credential.helper store
-          echo "https://${{ secrets.OCI_GIT_USERNAME }}:${{ secrets.OCI_GIT_PASSWORD }}@${{ secrets.OCI_GIT_REPO_URL }}" > ~/.git-credentials
+          API_URL=${{ secrets.OCI_BUCKET_URL }}
+          OBJECT_NAME=$(curl -s "$API_URL" | jq -r '.objects[0].name')
 
-      - name: Push to OCI Code Repository
+          echo "OBJECT_NAME=$OBJECT_NAME" >> $GITHUB_ENV
+      - name: Download AI model Object
         run: |
-          git remote add oci_repo https://${{ secrets.OCI_GIT_REPO_URL }}
-          git fetch oci_repo
-          git push -u oci_repo main
+          if [ -z "$OBJECT_NAME" ]; then
+            echo "No model objects found in the bucket."
+            exit 1
+          fi
 
-      - name: Cleanup Git Credentials
-        run: rm -f ~/.git-credentials
+          DOWNLOAD_URL="https://${{ secrets.OCI_BUCKET_URL }}/$OBJECT_NAME"
+          curl -o "src/service/model/best_acc_model.pt" "$DOWNLOAD_URL"
+      - name: Verify Downloaded Model
+        run: ls -lh src/service/model/

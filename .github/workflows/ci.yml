@@ -38,7 +38,7 @@ jobs:
 
           echo "Downloading model object from $OBJECT_NAME"
           DOWNLOAD_URL="${{ secrets.OCI_BUCKET_URL }}/$OBJECT_NAME"
-          curl -o "src/qshing_server/service/model/best_acc_model.pt" "$DOWNLOAD_URL"
+          curl -L -o "src/qshing_server/service/model/best_acc_model.pt" "$DOWNLOAD_URL"
 
       - name: Verify Downloaded Model
         run: ls -lh src/qshing_server/service/model/

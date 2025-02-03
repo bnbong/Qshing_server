@@ -11,12 +11,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Fetch Bucket
         run: |
           API_URL=${{ secrets.OCI_BUCKET_URL }}
           OBJECT_NAME=$(curl -s "$API_URL" | jq -r '.objects[0].name')
-
           echo "OBJECT_NAME=$OBJECT_NAME" >> $GITHUB_ENV
+
       - name: Download AI model Object
         run: |
           if [ -z "$OBJECT_NAME" ]; then
@@ -25,6 +26,7 @@ jobs:
           fi
 
           DOWNLOAD_URL="${{ secrets.OCI_BUCKET_URL }}/$OBJECT_NAME"
-          curl -o "../../src/service/model/best_acc_model.pt" "$DOWNLOAD_URL"
+          curl -o "../../src/qshing_server/service/model/best_acc_model.pt" "$DOWNLOAD_URL"
+
       - name: Verify Downloaded Model
-        run: ls -lh ../../src/service/model/
+        run: ls -lh ../../src/qshing_server/service/model/

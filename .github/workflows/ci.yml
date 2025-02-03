@@ -24,7 +24,7 @@ jobs:
             exit 1
           fi
 
-          DOWNLOAD_URL="https://${{ secrets.OCI_BUCKET_URL }}/$OBJECT_NAME"
+          DOWNLOAD_URL="${{ secrets.OCI_BUCKET_URL }}/$OBJECT_NAME"
           curl -o "src/service/model/best_acc_model.pt" "$DOWNLOAD_URL"
       - name: Verify Downloaded Model
         run: ls -lh src/service/model/

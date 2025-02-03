@@ -28,4 +28,4 @@ RUN if [ ! -f "src/qshing_server/service/model/best_acc_model.pt" ]; then \
     exit 1; \
 fi
 
-CMD ["uvicorn", "src.qshing_server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.qshing_server.main:app", "--host", "0.0.0.0", "--port", "8080"]

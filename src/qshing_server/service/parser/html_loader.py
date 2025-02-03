@@ -9,8 +9,9 @@ import time
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as ChromiumService
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
 
 from src.qshing_server.core.config import settings
 from src.qshing_server.core.exceptions import BackendExceptions
@@ -25,20 +26,16 @@ class HTMLLoader:
         self.chrome_options.add_argument("--no-sandbox")
         self.chrome_options.add_argument("--disable-dev-shm-usage")
         self.chrome_options.add_argument("--disable-gpu")
-        self.chrome_options.add_argument("--remote-debugging-port=9222")
-        self.chrome_options.add_argument("--disable-software-rasterizer")
-        self.chrome_options.add_argument("--disable-extensions")
-        self.chrome_options.add_argument("--disable-background-networking")
         self.driver = None
+        self.chromedriver_path = settings.CHROMEDRIVER_PATH
         self.timeout = settings.HTML_LOAD_TIMEOUT
         self.retries = settings.HTML_LOAD_RETRIES
 
     def _init_driver(self) -> bool:
         try:
-            self.driver = webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()),
-                options=self.chrome_options,
-            )
+            # service = ChromiumService(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+            service = webdriver.ChromeService(executable_path=self.chromedriver_path)
+            self.driver = webdriver.Chrome(service=service, options=self.chrome_options)
             self.driver.set_page_load_timeout(self.timeout)
             return True
         except Exception as e:

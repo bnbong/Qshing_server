@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     HTML_LOAD_TIMEOUT: int = 30  # seconds
     HTML_LOAD_RETRIES: int = 3
 
+    CHROME_BIN: str = "/usr/bin/chromium"
+    CHROMEDRIVER_PATH: str = "/usr/bin/chromedriver"
+
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
             message = (

@@ -3,7 +3,8 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # install chromium (Architecture : ARM)
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     wget \
     gnupg \
     apt-transport-https \
@@ -11,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     chromium \
     chromium-driver \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /usr/lib/chromium
 
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver

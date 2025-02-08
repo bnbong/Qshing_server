@@ -1,6 +1,6 @@
 version: 0.1
 component: build
-timeoutInSeconds: 6000
+timeoutInSeconds: 7200
 runAs: root
 shell: bash
 env:
@@ -40,6 +40,12 @@ steps:
       sudo groupadd docker
       sudo usermod -aG docker $USER
       newgrp docker
+  
+  - type: Command
+    name: "Check ARM 64 compatable"
+    timeoutInSeconds: 600
+    command: |
+      docker run --privileged --rm tonistiigi/binfmt --install all
 
   - type: Command
     name: "Init Variables"

@@ -25,7 +25,7 @@ steps:
     name: "Download AI Model"
     timeoutInSeconds: 300
     command: |
-      API_URL=${OCI_BUCKET_URL}
+      API_URL=${BUCKET_URL}
       OBJECT_NAME=$(curl -s "$API_URL" | jq -r '.objects[0].name')
       
       if [ -z "$OBJECT_NAME" ]; then

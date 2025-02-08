@@ -9,6 +9,7 @@ env:
     REPO_NAME: "qshing_server_image_registry"
 
   exportedVariables:
+    - BUILDRUN_HASH
     - APP_NAME
     - IMAGE_PATH
     - TAG
@@ -73,12 +74,19 @@ steps:
       ls -lh src/qshing_server/service/model/
 
   - type: Command
+    name: "Define Image Tag - Commit ID"
+    timeoutInSeconds: 30
+    command: |
+      COMMIT_ID=`echo ${OCI_TRIGGER_COMMIT_HASH} | cut -c 1-7`
+      BUILDRUN_HASH=`echo ${OCI_BUILD_RUN_ID} | rev | cut -c 1-7`
+      [ -z "$COMMIT_ID" ] && TAG=$BUILDRUN_HASH || TAG=$COMMIT_ID   
+
+  - type: Command
     name: "Define Image Path and Tag"
     timeoutInSeconds: 30
     command: |
       TENANCY_NAMESPACE=`oci os ns get --query data --raw-output`
       IMAGE_PATH=$OCI_RESOURCE_PRINCIPAL_REGION.ocir.io/$TENANCY_NAMESPACE/$REPO_NAME
-      TAG=sha-${OCI_TRIGGER_COMMIT_HASH:0:7}
 
   - type: Command
     timeoutInSeconds: 2400
@@ -89,12 +97,23 @@ steps:
       docker buildx inspect --bootstrap
       docker buildx build \
         --platform linux/arm64 \
-        --push \
-        --tag ${IMAGE_PATH}:${TAG} \
-        --tag ${IMAGE_PATH}:latest \
+        --pull \
+        --rm \
+        --t new-generated-image\
         .
+
+  - type: Command
+    name: "Check exportedVariables"
+    timeoutInSeconds: 30
+    command: |  
+      [ -z "$APP_NAME" ] && APP_NAME=unknown          
+      [ -z "$IMAGE_PATH" ] && IMAGE_PATH=unknown    
+      [ -z "$TAG" ] && TAG=unknown
+      echo "APP_NAME: " $APP_NAME      
+      echo "IMAGE_PATH: " $IMAGE_PATH
+      echo "TAG: " $TAG
 
 outputArtifacts:
   - name: output-image
     type: DOCKER_IMAGE
-    location: ${IMAGE_PATH}:${TAG}
+    location: new-generated-image

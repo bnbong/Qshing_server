@@ -15,6 +15,12 @@ env:
 
 steps:
   - type: Command
+    name: "Install Dependencies"
+    timeoutInSeconds: 60
+    command: |
+      apt-get update && apt-get install -y jq
+
+  - type: Command
     name: "Init Variables"
     timeoutInSeconds: 30
     command: |

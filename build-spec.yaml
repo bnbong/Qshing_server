@@ -18,7 +18,9 @@ steps:
     name: "Install Dependencies"
     timeoutInSeconds: 60
     command: |
-      apt-get update && apt-get install -y jq
+      yum update -y
+      yum install -y epel-release
+      yum install -y jq
 
   - type: Command
     name: "Init Variables"

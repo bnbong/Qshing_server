@@ -16,7 +16,7 @@ env:
 steps:
   - type: Command
     name: "Install Dependencies"
-    timeoutInSeconds: 60
+    timeoutInSeconds: 600
     command: |
       yum update -y
       yum install -y epel-release

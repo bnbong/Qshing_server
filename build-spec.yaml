@@ -16,11 +16,30 @@ env:
 steps:
   - type: Command
     name: "Install Dependencies"
-    timeoutInSeconds: 600
+    timeoutInSeconds: 1200
     command: |
       yum update -y
       yum install -y epel-release
       yum install -y jq
+      yum install -y yum-utils
+
+  - type: Command
+    name: "Install Docker"
+    timeoutInSeconds: 1200
+    command: |
+      yum update -y
+      yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+      systemctl start docker
+      systemctl enable docker
+  
+  - type: Command
+    name: "Docker sudo group add"
+    timeoutInSeconds: 300
+    command: |
+      sudo groupadd docker
+      sudo usermod -aG docker $USER
+      newgrp docker
 
   - type: Command
     name: "Init Variables"
@@ -56,11 +75,12 @@ steps:
       TAG=sha-${OCI_TRIGGER_COMMIT_HASH:0:7}
 
   - type: Command
-    timeoutInSeconds: 1200
+    timeoutInSeconds: 2400
     name: "Build and Push Container Image"
     command: |
       cd ${OCI_PRIMARY_SOURCE_DIR}
-      docker buildx create --use
+      docker buildx create --name mybuilder --use
+      docker buildx inspect --bootstrap
       docker buildx build \
         --platform linux/arm64 \
         --push \

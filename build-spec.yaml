@@ -14,6 +14,8 @@ env:
     - IMAGE_PATH
     - TAG
 
+inputArtifacts: 
+
 steps:
   - type: Command
     name: "Install Dependencies"
@@ -97,10 +99,9 @@ steps:
       docker buildx inspect --bootstrap
       docker buildx build \
         --platform linux/arm64 \
-        --pull \
-        --rm \
         -t new-generated-image \
         .
+      docker images
 
   - type: Command
     name: "Check exportedVariables"

@@ -99,7 +99,7 @@ steps:
         --platform linux/arm64 \
         --pull \
         --rm \
-        --t new-generated-image\
+        -t new-generated-image\
         .
 
   - type: Command

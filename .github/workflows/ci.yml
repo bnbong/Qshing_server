@@ -65,10 +65,6 @@ jobs:
           REDIS_HOST=${{ secrets.REDIS_HOST }}
           REDIS_PORT=${{ secrets.REDIS_PORT }}
           REDIS_DB=${{ secrets.REDIS_DB }}
-          
-          # App Configuration
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          MODEL_NAME=best_acc_model.pt
           EOF
           
           chmod 600 .env

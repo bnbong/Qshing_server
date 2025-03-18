@@ -1,0 +1,155 @@
+version: 0.1
+component: build
+timeoutInSeconds: 7200
+runAs: root
+shell: bash
+env:
+  variables:
+    defaultAppName: "qshing-server"  # not necessary
+    REPO_NAME: "qshing_server_image_registry"
+
+  exportedVariables:
+    - BUILDRUN_HASH
+    - APP_NAME
+    - IMAGE_PATH
+    - TAG
+
+inputArtifacts: 
+
+steps:
+  - type: Command
+    name: "Install Dependencies"
+    timeoutInSeconds: 1200
+    command: |
+      yum update -y
+      yum install -y epel-release
+      yum install -y jq
+      yum install -y yum-utils
+
+  - type: Command
+    name: "Install Docker"
+    timeoutInSeconds: 1200
+    command: |
+      yum update -y
+      yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+      systemctl start docker
+      systemctl enable docker
+  
+  - type: Command
+    name: "Docker sudo group add"
+    timeoutInSeconds: 300
+    command: |
+      sudo groupadd docker
+      sudo usermod -aG docker $USER
+      newgrp docker
+  
+  - type: Command
+    name: "Check ARM 64 compatable"
+    timeoutInSeconds: 600
+    command: |
+      docker run --privileged --rm tonistiigi/binfmt --install all
+
+  - type: Command
+    name: "Init Variables"
+    timeoutInSeconds: 30
+    command: |
+      APP_NAME=$defaultAppName
+      echo $APP_NAME
+
+  - type: Command
+    name: "Download AI Model"
+    timeoutInSeconds: 300
+    command: |
+      API_URL=${BUCKET_URL}
+      OBJECT_NAME=$(curl -s "$API_URL" | jq -r '.objects[0].name')
+      
+      if [ -z "$OBJECT_NAME" ]; then
+        echo "No model objects found in the bucket."
+        exit 1
+      fi
+      
+      echo "Downloading model object from $OBJECT_NAME"
+      DOWNLOAD_URL="${API_URL}/${OBJECT_NAME}"
+      curl -L -o "src/qshing_server/service/model/best_acc_model.pt" "$DOWNLOAD_URL"
+      
+      ls -lh src/qshing_server/service/model/
+  
+  - type: Command
+    name: "Create .env file"
+    timeoutInSeconds: 30
+    command: |
+      cat > .env << EOF
+      # MongoDB Configuration
+          MONGODB_USER=${{ secrets.MONGODB_USER }}
+          MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}
+          MONGODB_HOST=${{ secrets.MONGODB_HOST }}
+          MONGODB_PORT=${{ secrets.MONGODB_PORT }}
+          MONGODB_NAME=${{ secrets.MONGODB_NAME }}
+          MONGO_URI=mongodb://${{ secrets.MONGODB_USER }}:${{ secrets.MONGODB_PASSWORD }}@${{ secrets.MONGODB_HOST }}:${{ secrets.MONGODB_PORT }}/${{ secrets.MONGODB_NAME }}
+          
+          # PostgreSQL Configuration
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          
+          # Redis Configuration
+          REDIS_HOST=${{ secrets.REDIS_HOST }}
+          REDIS_PORT=${{ secrets.REDIS_PORT }}
+          REDIS_DB=${{ secrets.REDIS_DB }}
+          
+          # App Configuration
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          MODEL_NAME=best_acc_model.pt
+          EOF
+          
+          chmod 600 .env
+          
+          echo ".env file created successfully"
+
+  - type: Command
+    name: "Define Image Tag - Commit ID"
+    timeoutInSeconds: 30
+    command: |
+      COMMIT_ID=`echo ${OCI_TRIGGER_COMMIT_HASH} | cut -c 1-7`
+      BUILDRUN_HASH=`echo ${OCI_BUILD_RUN_ID} | rev | cut -c 1-7`
+      [ -z "$COMMIT_ID" ] && TAG=$BUILDRUN_HASH || TAG=$COMMIT_ID   
+
+  - type: Command
+    name: "Define Image Path and Tag"
+    timeoutInSeconds: 30
+    command: |
+      TENANCY_NAMESPACE=`oci os ns get --query data --raw-output`
+      IMAGE_PATH=$OCI_RESOURCE_PRINCIPAL_REGION.ocir.io/$TENANCY_NAMESPACE/$REPO_NAME
+
+  - type: Command
+    timeoutInSeconds: 2400
+    name: "Build and Push Container Image"
+    command: |
+      cd ${OCI_PRIMARY_SOURCE_DIR}
+      docker buildx create --name mybuilder --use
+      docker buildx inspect --bootstrap
+      docker buildx build \
+        --platform linux/arm64 \
+        --load \
+        -t new-generated-image \
+        .
+      docker images
+
+  - type: Command
+    name: "Check exportedVariables"
+    timeoutInSeconds: 30
+    command: |  
+      [ -z "$APP_NAME" ] && APP_NAME=unknown          
+      [ -z "$IMAGE_PATH" ] && IMAGE_PATH=unknown    
+      [ -z "$TAG" ] && TAG=unknown
+      echo "APP_NAME: " $APP_NAME      
+      echo "IMAGE_PATH: " $IMAGE_PATH
+      echo "TAG: " $TAG
+
+outputArtifacts:
+  - name: output-image
+    type: DOCKER_IMAGE
+    location: new-generated-image

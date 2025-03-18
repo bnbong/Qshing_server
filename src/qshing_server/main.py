@@ -11,6 +11,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from src.qshing_server.api import api_router
 from src.qshing_server.core.config import settings
+from src.qshing_server.db.db_manager import DBManager
 from src.qshing_server.service.model.model_manager import PhishingDetector
 from src.qshing_server.utils.logging import Logger
 
@@ -22,11 +23,24 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("Starting server...")
 
+        # 데이터베이스 매니저 초기화
+        logger.info("Initializing database connections...")
+        app.state.db_manager = DBManager()
+
+        # 모델 로드
         logger.info("Loading model...")
         app.state.model = PhishingDetector(model_path=settings.MODEL_PATH)
+
         yield
     finally:
         logger.info("Shutting down server...")
+
+        # 데이터베이스 연결 종료
+        if hasattr(app.state, "db_manager"):
+            logger.info("Closing database connections...")
+            app.state.db_manager.close()
+
+        # 모델 언로드
         app.state.model = None
         logger.info("Model unloaded")
 
@@ -44,11 +58,6 @@ if settings.all_cors_origins:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-
-@app.get("/")
-def read_root():
-    return {"message": "Main page"}
 
 
 app.include_router(api_router)

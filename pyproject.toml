@@ -20,6 +20,12 @@ dependencies = [
     "html2text>=2024.2.26",
     "langdetect>=1.0.9",
     "bs4>=0.0.2",
+    "redis>=5.2.1",
+    "sqlalchemy>=2.0.39",
+    "pymongo>=4.11.2",
+    "pytest>=8.3.5",
+    "psycopg2>=2.9.10",
+    "psycopg2-binary>=2.9.10",
 ]
 requires-python = "==3.12.*"
 readme = "README.md"
@@ -56,6 +62,8 @@ module = [
     "html2text.*",
     "transformers.*",
     "tqdm.*",
-    "langdetect.*"
+    "langdetect.*",
+    "redis.*",
+    "pymongo.*",
 ]
 ignore_missing_imports = true

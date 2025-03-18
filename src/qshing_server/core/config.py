@@ -57,6 +57,36 @@ class Settings(BaseSettings):
     CHROME_BIN: str = "/usr/bin/chromium"
     CHROMEDRIVER_PATH: str = "/usr/bin/chromedriver"
 
+    # Redis
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_CACHE_TTL: int = 86400  # 1일
+
+    # PostgreSQL
+    POSTGRES_USER: str = "admin"
+    POSTGRES_PASSWORD: str = "password"
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_DB: str = "phishing_data"
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def POSTGRES_URI(self) -> str:
+        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
+    # MongoDB
+    MONGODB_USER: str = "admin"
+    MONGODB_PASSWORD: str = "password"
+    MONGODB_HOST: str = "localhost"
+    MONGODB_PORT: int = 27017
+    MONGODB_NAME: str = "phishing_feedback"
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def MONGODB_URI(self) -> str:
+        return f"mongodb://{self.MONGODB_USER}:{self.MONGODB_PASSWORD}@{self.MONGODB_HOST}:{self.MONGODB_PORT}/{self.MONGODB_NAME}"
+
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
             message = (

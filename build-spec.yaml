@@ -1,6 +1,6 @@
 version: 0.1
 component: build
-timeoutInSeconds: 7200
+timeoutInSeconds: 9600
 runAs: root
 shell: bash
 env:
@@ -19,7 +19,7 @@ inputArtifacts:
 steps:
   - type: Command
     name: "Install Dependencies"
-    timeoutInSeconds: 1200
+    timeoutInSeconds: 3600
     command: |
       yum update -y
       yum install -y epel-release

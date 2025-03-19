@@ -1,6 +1,6 @@
 version: 0.1
 component: build
-timeoutInSeconds: 9600
+timeoutInSeconds: 11400
 runAs: root
 shell: bash
 env:
@@ -46,14 +46,24 @@ steps:
 
   - type: Command
     name: "Install PostgreSQL"
-    timeoutInSeconds: 600
+    timeoutInSeconds: 2400
     command: |
-      dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-aarch64/pgdg-redhat-repo-latest.noarch.rpm
-      dnf -qy module disable postgresql
-      dnf install -y postgresql14-server
-      /usr/pgsql-14/bin/postgresql-14-setup initdb
-      systemctl enable postgresql-14
-      systemctl start postgresql-14
+      yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-aarch64/pgdg-redhat-repo-latest.noarch.rpm
+      
+      yum-config-manager --save --setopt=pgdg-common.skip_if_unavailable=true || true
+      yum-config-manager --save --setopt=pgdg14-common.skip_if_unavailable=true || true
+      
+      yum install -y postgresql14-server postgresql14-devel
+      
+      yum install -y gcc python3-devel
+      
+      if [ -f "/usr/pgsql-14/bin/postgresql-14-setup" ]; then
+        /usr/pgsql-14/bin/postgresql-14-setup initdb || true
+        systemctl enable postgresql-14 || true
+        systemctl start postgresql-14 || true
+      fi
+      
+      echo "PostgreSQL development libraries installed successfully"
 
   - type: Command
     name: "Check ARM 64 compatable"

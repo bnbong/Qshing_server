@@ -45,20 +45,6 @@ steps:
       newgrp docker
 
   - type: Command
-    name: "Install PostgreSQL"
-    timeoutInSeconds: 2400
-    command: |
-      yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-aarch64/pgdg-redhat-repo-latest.noarch.rpm
-      yum install -y postgresql14-server postgresql14-contrib
-      
-      /usr/pgsql-14/bin/postgresql-14-setup initdb
-
-      systemctl start postgresql-14
-      systemctl enable postgresql-14
-
-      echo "PostgreSQL development libraries installed successfully"
-
-  - type: Command
     name: "Check ARM 64 compatable"
     timeoutInSeconds: 600
     command: |

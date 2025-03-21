@@ -6,17 +6,17 @@
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import pymongo
 import redis
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import desc
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import Session, SQLModel, create_engine, select
 
 from src.qshing_server.core.config import settings
 from src.qshing_server.core.exceptions import BackendExceptions
-from src.qshing_server.db.models import Base, PhishingURL, UserFeedback
+from src.qshing_server.db.models import PhishingURL, UserFeedback
 
 logger = logging.getLogger("main")
 
@@ -38,7 +38,7 @@ class DBManager:
     def _initialize(self):
         # PostgreSQL 연결 설정
         self.postgres_engine = create_engine(settings.POSTGRES_URI)
-        Base.metadata.create_all(bind=self.postgres_engine)
+        SQLModel.metadata.create_all(bind=self.postgres_engine)
         self.SessionLocal = sessionmaker(
             autocommit=False, autoflush=False, bind=self.postgres_engine
         )
@@ -106,20 +106,19 @@ class DBManager:
         """PostgreSQL의 피싱 URL을 Redis 캐시로 업데이트"""
         session = self.get_postgres_session()
         try:
-            urls = (
-                session.query(PhishingURL)
-                .filter(PhishingURL.is_phishing == True)
-                .order_by(PhishingURL.detection_time.desc())
+            urls = session.exec(
+                select(PhishingURL)
+                .where(PhishingURL.is_phishing == True)
+                .order_by(desc("detection_time"))
                 .limit(limit)
-                .all()
-            )
+            ).all()
 
             count = 0
             for url_obj in urls:
                 self.cache_phishing_result(
-                    url_obj.url,  # type: ignore
-                    url_obj.is_phishing,  # type: ignore
-                    url_obj.confidence,  # type: ignore
+                    url_obj.url,
+                    url_obj.is_phishing,
+                    url_obj.confidence,
                 )
                 count += 1
 
@@ -139,18 +138,19 @@ class DBManager:
         """피싱 URL 정보를 PostgreSQL에 저장"""
         session = self.get_postgres_session()
         try:
-            # 기존 URL 조회
-            existing = session.query(PhishingURL).filter(PhishingURL.url == url).first()
+            existing = session.exec(
+                select(PhishingURL).where(PhishingURL.url == url)
+            ).first()
 
             if existing:
                 # 기존 데이터 업데이트
-                existing.is_phishing = is_phishing  # type: ignore
-                existing.confidence = confidence  # type: ignore
-                existing.detection_time = datetime.utcnow()  # type: ignore
+                existing.is_phishing = is_phishing
+                existing.confidence = confidence
+                existing.detection_time = datetime.utcnow()
                 if html_content:
-                    existing.html_content = html_content  # type: ignore
+                    existing.html_content = html_content
                 if features:
-                    existing.features = json.dumps(features)  # type: ignore
+                    existing.features = json.dumps(features)
                 url_obj = existing
             else:
                 # 새로운 데이터 추가
@@ -175,17 +175,18 @@ class DBManager:
         finally:
             session.close()
 
-    def get_phishing_urls(self, limit: int = 100, offset: int = 0) -> List[PhishingURL]:
+    def get_phishing_urls(
+        self, limit: int = 100, offset: int = 0
+    ) -> Sequence[PhishingURL]:
         """PostgreSQL에서 피싱 URL 목록 조회"""
         session = self.get_postgres_session()
         try:
-            return (
-                session.query(PhishingURL)
-                .order_by(PhishingURL.detection_time.desc())
+            return session.exec(
+                select(PhishingURL)
+                .order_by(desc("detection_time"))
                 .limit(limit)
                 .offset(offset)
-                .all()
-            )
+            ).all()
         finally:
             session.close()
 

@@ -1,40 +1,50 @@
 # --------------------------------------------------------------------------
-# 데이터베이스 모델 정의
+# 데이터베이스 모델 정의 모듈
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
+from beanie import Document
+from pydantic import Field
+from sqlmodel import JSON, Column
+from sqlmodel import Field as SQLField
+from sqlmodel import SQLModel
 
-Base = declarative_base()
+
+class Base(SQLModel):
+    pass
 
 
-# PostgreSQL 모델
-class PhishingURL(Base):  # type: ignore
+class PhishingURL(SQLModel, table=True):
+    """피싱 URL 데이터 모델"""
+
     __tablename__ = "phishing_urls"
 
-    id = Column(Integer, primary_key=True, index=True)
-    url = Column(String, index=True)
-    is_phishing = Column(Boolean, default=False)
-    confidence = Column(Float)
-    detection_time = Column(DateTime, default=datetime.utcnow)
-    html_content = Column(Text, nullable=True)
-    features = Column(Text, nullable=True)  # JSON 형태로 저장될 특성들
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    url: str = SQLField(index=True)
+    is_phishing: bool = SQLField(default=False)
+    confidence: float = SQLField(default=0.0)
+    detection_time: datetime = SQLField(default_factory=datetime.utcnow)
+    html_content: Optional[str] = None
+    features: Optional[str] = None  # JSON
 
 
-# MongoDB 문서 모델
-class UserFeedback(BaseModel):
+# MongoDB 모델
+class UserFeedback(Document):
+    """사용자 피드백 데이터 모델"""
+
     url: str
     is_correct: bool
-    user_comment: Optional[str] = None
     detected_result: bool
     confidence: float
+    user_comment: Optional[str] = None
     feedback_time: datetime = Field(default_factory=datetime.utcnow)
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict] = None
+
+    class Settings:
+        name = "user_feedback"
 
 
 # Redis 캐시 키-값 구조 (개념적 모델)

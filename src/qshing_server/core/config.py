@@ -8,7 +8,14 @@ import secrets
 import warnings
 from typing import Annotated, Any, Literal, Optional
 
-from pydantic import AnyUrl, BeforeValidator, computed_field, model_validator
+from pydantic import (
+    AnyUrl,
+    BeforeValidator,
+    PostgresDsn,
+    computed_field,
+    model_validator,
+)
+from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
 
@@ -72,8 +79,15 @@ class Settings(BaseSettings):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def POSTGRES_URI(self) -> str:
-        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    def POSTGRES_URI(self) -> PostgresDsn:
+        return MultiHostUrl.build(  # type: ignore
+            scheme="postgresql+psycopg2",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD,
+            host=self.POSTGRES_HOST,
+            port=self.POSTGRES_PORT,
+            path=self.POSTGRES_DB,
+        )
 
     # MongoDB
     MONGODB_USER: str = "admin"

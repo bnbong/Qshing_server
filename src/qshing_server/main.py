@@ -26,7 +26,6 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("Starting server...")
 
-        # 데이터베이스 매니저 초기화
         logger.info("Initializing database connections...")
         app.state.db_manager = DBManager()
 
@@ -34,10 +33,14 @@ async def lifespan(app: FastAPI):
         logger.info("Loading model...")
         app.state.model = PhishingDetector(model_path=settings.MODEL_PATH)
 
-        # MongoDB connector 초기화
-        mongo_client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_URI)  # type: ignore
+        if not hasattr(app.state, "mongo_client"):
+            logger.info("Initializing MongoDB connection...")
+            mongo_uri = str(settings.MONGODB_URI)
+            app.state.mongo_client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)
+
         await init_beanie(
-            database=mongo_client[settings.MONGODB_NAME], document_models=[UserFeedback]
+            database=app.state.mongo_client[settings.MONGODB_NAME],
+            document_models=[UserFeedback],
         )
 
         logger.info("Application startup complete")
@@ -46,7 +49,6 @@ async def lifespan(app: FastAPI):
     finally:
         logger.info("Shutting down server...")
 
-        # 데이터베이스 연결 종료
         if hasattr(app.state, "db_manager"):
             logger.info("Closing database connections...")
             app.state.db_manager.close()
@@ -55,8 +57,11 @@ async def lifespan(app: FastAPI):
         app.state.model = None
         logger.info("Model unloaded")
 
-        # MongoDB connector 연결 종료
-        mongo_client.close()
+        if hasattr(app.state, "mongo_client") and app.state.mongo_client is not None:
+            logger.info("Closing MongoDB connection...")
+            app.state.mongo_client.close()
+            app.state.mongo_client = None
+
         logger.info("Application shutdown complete")
 
 

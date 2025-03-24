@@ -1,5 +1,5 @@
 # --------------------------------------------------------------------------
-# API Router module
+# API module
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
@@ -9,7 +9,8 @@ from fastapi import APIRouter
 
 from src.qshing_server.dto.base import ResponseSchema
 
-from .phishing_routers import router as determine_router
+from . import deps
+from .phishing_routers import router as phishing_router
 
 api_router = APIRouter()
 
@@ -27,4 +28,4 @@ async def health_check():
     return response
 
 
-api_router.include_router(determine_router)
+api_router.include_router(phishing_router)

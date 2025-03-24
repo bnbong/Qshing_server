@@ -3,12 +3,9 @@
 #
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
-
-from src.qshing_server.dto.base import ResponseSchema
 
 
 class PhishingDetectionRequest(BaseModel):
@@ -35,11 +32,3 @@ class PhishingURLListResponse(BaseModel):
     total: int = Field(..., description="전체 항목 수")
     offset: int = Field(0, description="시작 오프셋")
     limit: int = Field(..., description="조회 제한 수")
-
-
-class CacheUpdateResponse(BaseModel):
-    updated_count: int = Field(..., description="업데이트된 항목 수")
-    status: str = Field(..., description="상태")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="업데이트 시간"
-    )

@@ -23,10 +23,13 @@ def analyze(
     url: str,
     request: Request,
     response_model: Type[PhishingDetectionResponse] = PhishingDetectionResponse,
+    db_manager: Optional[DBManager] = None,
 ) -> Optional[Any]:
     logger.info(f"Analyzing URL: {url}")
 
-    db_manager = DBManager()
+    # 외부에서 DB 매니저가 제공되지 않으면 새로 생성
+    if db_manager is None:
+        db_manager = DBManager()
 
     # 1. Redis 캐시에서 결과 확인
     cached_result = db_manager.get_cached_result(url)
@@ -87,11 +90,14 @@ def analyze(
         )
 
 
-def save_feedback(feedback: UserFeedbackRequest) -> Dict[str, Any]:
+def save_feedback(
+    feedback: UserFeedbackRequest, db_manager: Optional[DBManager] = None
+) -> Dict[str, Any]:
     """사용자 피드백 저장"""
     logger.info(f"Saving feedback for URL: {feedback.url}")
 
-    db_manager = DBManager()
+    if db_manager is None:
+        db_manager = DBManager()
 
     # MongoDB에 피드백 저장
     user_feedback = UserFeedback(
@@ -108,11 +114,15 @@ def save_feedback(feedback: UserFeedbackRequest) -> Dict[str, Any]:
     return {"feedback_id": feedback_id, "status": "success"}
 
 
-def get_recent_phishing_urls(limit: int = 100, offset: int = 0) -> list:
+def get_recent_phishing_urls(
+    limit: int = 100, offset: int = 0, db_manager: Optional[DBManager] = None
+) -> list:
     """최근 피싱 URL 목록 조회"""
     logger.info(f"Fetching recent phishing URLs, limit: {limit}, offset: {offset}")
 
-    db_manager = DBManager()
+    if db_manager is None:
+        db_manager = DBManager()
+
     urls = db_manager.get_phishing_urls(limit=limit, offset=offset)
 
     return [
@@ -126,11 +136,13 @@ def get_recent_phishing_urls(limit: int = 100, offset: int = 0) -> list:
     ]
 
 
-def update_cache() -> Dict[str, Any]:
+def update_cache(db_manager: Optional[DBManager] = None) -> Dict[str, Any]:
     """PostgreSQL의 피싱 URL을 Redis 캐시로 업데이트"""
     logger.info("Updating Redis cache from PostgreSQL")
 
-    db_manager = DBManager()
+    if db_manager is None:
+        db_manager = DBManager()
+
     count = db_manager.update_cache_from_db()
 
     return {"updated_count": count, "status": "success"}

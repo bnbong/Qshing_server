@@ -29,6 +29,7 @@ dependencies = [
     "alembic>=1.15.1",
     "sqlmodel>=0.0.24",
     "beanie>=1.29.0",
+    "httpx>=0.28.1",
 ]
 requires-python = "==3.12.*"
 readme = "README.md"

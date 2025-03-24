@@ -3,105 +3,105 @@ name: CI - upload image to registry
 on:
   push:
     branches:
-      - main  # [test]
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
-      OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
-      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
-      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
-      OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
+    # env:
+    #   OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+    #   OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+    #   OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+    #   OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+    #   OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
+      # - name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v3
+      #   with:
+      #     platforms: arm64
 
-      - name: Fetch Bucket
-        run: |
-          API_URL=${{ secrets.OCI_BUCKET_URL }}
-          OBJECT_NAME=$(curl -s "$API_URL" | jq -r '.objects[0].name')
-          echo "OBJECT_NAME=$OBJECT_NAME" >> $GITHUB_ENV
+      # - name: Fetch Bucket
+      #   run: |
+      #     API_URL=${{ secrets.OCI_BUCKET_URL }}
+      #     OBJECT_NAME=$(curl -s "$API_URL" | jq -r '.objects[0].name')
+      #     echo "OBJECT_NAME=$OBJECT_NAME" >> $GITHUB_ENV
 
-      - name: Download AI model Object
-        run: |
-          if [ -z "$OBJECT_NAME" ]; then
-            echo "No model objects found in the bucket."
-            exit 1
-          fi
+      # - name: Download AI model Object
+      #   run: |
+      #     if [ -z "$OBJECT_NAME" ]; then
+      #       echo "No model objects found in the bucket."
+      #       exit 1
+      #     fi
 
-          echo "Downloading model object from $OBJECT_NAME"
-          DOWNLOAD_URL="${{ secrets.OCI_BUCKET_URL }}/$OBJECT_NAME"
-          curl -L -o "src/qshing_server/service/model/best_acc_model.pt" "$DOWNLOAD_URL"
+      #     echo "Downloading model object from $OBJECT_NAME"
+      #     DOWNLOAD_URL="${{ secrets.OCI_BUCKET_URL }}/$OBJECT_NAME"
+      #     curl -L -o "src/qshing_server/service/model/best_acc_model.pt" "$DOWNLOAD_URL"
 
-      - name: Verify Downloaded Model
-        run: ls -lh src/qshing_server/service/model/
+      # - name: Verify Downloaded Model
+      #   run: ls -lh src/qshing_server/service/model/
 
-      - name: Create .env file
-        run: |
-          cat > .env << EOF
-          # MongoDB Configuration
-          MONGODB_USER=${{ secrets.MONGODB_USER }}
-          MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}
-          MONGODB_HOST=${{ secrets.MONGODB_HOST }}
-          MONGODB_PORT=${{ secrets.MONGODB_PORT }}
-          MONGODB_NAME=${{ secrets.MONGODB_NAME }}
-          MONGO_URI=mongodb://${{ secrets.MONGODB_USER }}:${{ secrets.MONGODB_PASSWORD }}@${{ secrets.MONGODB_HOST }}:${{ secrets.MONGODB_PORT }}/${{ secrets.MONGODB_NAME }}
+      # - name: Create .env file
+      #   run: |
+      #     cat > .env << EOF
+      #     # MongoDB Configuration
+      #     MONGODB_USER=${{ secrets.MONGODB_USER }}
+      #     MONGODB_PASSWORD=${{ secrets.MONGODB_PASSWORD }}
+      #     MONGODB_HOST=${{ secrets.MONGODB_HOST }}
+      #     MONGODB_PORT=${{ secrets.MONGODB_PORT }}
+      #     MONGODB_NAME=${{ secrets.MONGODB_NAME }}
+      #     MONGO_URI=mongodb://${{ secrets.MONGODB_USER }}:${{ secrets.MONGODB_PASSWORD }}@${{ secrets.MONGODB_HOST }}:${{ secrets.MONGODB_PORT }}/${{ secrets.MONGODB_NAME }}
           
-          # PostgreSQL Configuration
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+      #     # PostgreSQL Configuration
+      #     POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+      #     POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+      #     POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+      #     POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+      #     POSTGRES_DB=${{ secrets.POSTGRES_DB }}
           
-          # Redis Configuration
-          REDIS_HOST=${{ secrets.REDIS_HOST }}
-          REDIS_PORT=${{ secrets.REDIS_PORT }}
-          REDIS_DB=${{ secrets.REDIS_DB }}
-          EOF
+      #     # Redis Configuration
+      #     REDIS_HOST=${{ secrets.REDIS_HOST }}
+      #     REDIS_PORT=${{ secrets.REDIS_PORT }}
+      #     REDIS_DB=${{ secrets.REDIS_DB }}
+      #     EOF
           
-          chmod 600 .env
+      #     chmod 600 .env
           
-          echo ".env file created successfully"
+      #     echo ".env file created successfully"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
 
-      - name: Get or create an OCIR Repository
-        uses: oracle-actions/get-ocir-repository@v1.3.0
-        id: get-ocir-repository
-        with:
-          name: qshing_server_image_registry
-          compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
+      # - name: Get or create an OCIR Repository
+      #   uses: oracle-actions/get-ocir-repository@v1.3.0
+      #   id: get-ocir-repository
+      #   with:
+      #     name: qshing_server_image_registry
+      #     compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
 
-      - name: Log into OCIR
-        uses: oracle-actions/login-ocir@v1.3.0
-        id: login-ocir
-        with:
-          auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ steps.get-ocir-repository.outputs.repo_path }}
-          flavor: |
-            latest=true
-          tags: |
-            type=sha
+      # - name: Log into OCIR
+      #   uses: oracle-actions/login-ocir@v1.3.0
+      #   id: login-ocir
+      #   with:
+      #     auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
+      # - name: Docker meta
+      #   id: meta
+      #   uses: docker/metadata-action@v5
+      #   with:
+      #     images: |
+      #       ${{ steps.get-ocir-repository.outputs.repo_path }}
+      #     flavor: |
+      #       latest=true
+      #     tags: |
+      #       type=sha
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          platforms: linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+      # - name: Build and push
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: .
+      #     push: true
+      #     platforms: linux/arm64
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}

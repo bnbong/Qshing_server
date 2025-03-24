@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Sequence, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Sequence
 
 import pymongo
 import redis

@@ -37,7 +37,7 @@ class DBManager:
 
     def _initialize(self):
         # PostgreSQL 연결 설정
-        self.postgres_engine = create_engine(settings.POSTGRES_URI)
+        self.postgres_engine = create_engine(str(settings.POSTGRES_URI))
         SQLModel.metadata.create_all(bind=self.postgres_engine)
         self.SessionLocal = sessionmaker(
             autocommit=False, autoflush=False, bind=self.postgres_engine

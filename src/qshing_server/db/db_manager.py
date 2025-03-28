@@ -40,7 +40,7 @@ class DBManager:
         self.postgres_engine = create_engine(str(settings.POSTGRES_URI))
         SQLModel.metadata.create_all(bind=self.postgres_engine)
         self.SessionLocal = sessionmaker(
-            autocommit=False, autoflush=False, bind=self.postgres_engine
+            autocommit=False, autoflush=False, bind=self.postgres_engine, class_=Session
         )
 
         # Redis 연결 설정

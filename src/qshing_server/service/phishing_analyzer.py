@@ -101,12 +101,12 @@ def save_feedback(
 
     # MongoDB에 피드백 저장
     user_feedback = UserFeedback(
-        url=feedback.url,
-        is_correct=feedback.is_correct,
-        user_comment=feedback.comment,
-        detected_result=feedback.detected_result,
-        confidence=feedback.confidence,
-        metadata=feedback.metadata,
+        url=feedback.url,  # 피드백 제출 대상 URL
+        is_correct=feedback.is_correct,  # 사용자 판정 결과
+        user_comment=feedback.comment,  # 사용자 코멘트
+        detected_result=feedback.detected_result,  # 모델 판정 결과
+        confidence=feedback.confidence,  # 모델 판정 신뢰도
+        metadata=feedback.metadata,  # 별점 등 저장
     )
 
     feedback_id = db_manager.save_user_feedback(user_feedback)

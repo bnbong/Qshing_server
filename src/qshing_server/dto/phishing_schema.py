@@ -19,12 +19,12 @@ class PhishingDetectionResponse(BaseModel):
 
 
 class UserFeedbackRequest(BaseModel):
-    url: str = Field(..., description="피드백을 제공하는 URL")
+    url: str = Field(..., description="피드백 제공할 URL")
     is_correct: bool = Field(..., description="AI 모델 판정 결과가 정확한지 여부")
     comment: Optional[str] = Field(None, description="사용자 피드백 내용")
     detected_result: bool = Field(..., description="AI 모델이 판정한 결과")
     confidence: float = Field(..., description="AI 모델의 판정 신뢰도")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="추가 메타데이터")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="추가 메타데이터 (별점, 브라우저 정보, OS 등)")
 
 
 class PhishingURLListResponse(BaseModel):

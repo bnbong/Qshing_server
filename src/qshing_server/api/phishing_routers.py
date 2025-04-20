@@ -30,7 +30,7 @@ router = APIRouter(prefix="/phishing-detection")
 @router.get("/")
 async def determine():
     """
-    Phshing site detection info 엔드포인트
+    Phshing site detection info 엔드포인트 (health check)
     """
     result = {"status": "ok", "message": "Phshing site detection with url"}
     response: ResponseSchema[dict] = ResponseSchema(

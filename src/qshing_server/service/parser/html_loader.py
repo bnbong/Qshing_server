@@ -42,7 +42,26 @@ class HTMLLoader:
             logger.error(f"Failed to initialize WebDriver: {e}")
             return False
 
+    # TODO : 단축 url이나 리디렉션 url인 경우의 분기 처리
+
+    def _normalize_url(self, url: str) -> str:
+        if url.startswith("http://"):
+            protocol = "http://"
+            rest = url[7:]
+        elif url.startswith("https://"):
+            protocol = "https://"
+            rest = url[8:]
+        else:
+            protocol = ""
+            rest = url
+        if not rest.startswith("www."):
+            rest = "www." + rest
+        if not rest.endswith("/") and ("?" not in rest and "#" not in rest):
+            rest += "/"
+        return protocol + rest
+
     def __load_url(self, url: str) -> str:
+        url = self._normalize_url(url)
         try:
             if not (url.startswith("http://") or url.startswith("https://")):
                 # Try HTTP first

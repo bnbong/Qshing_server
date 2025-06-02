@@ -2,6 +2,19 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Hugging Face 캐시 경로 빌드 인수 및 환경 변수 설정
+ARG HF_HOME=/tmp/huggingface
+ARG TRANSFORMERS_CACHE=/tmp/huggingface/transformers
+ARG HF_DATASETS_CACHE=/tmp/huggingface/datasets
+ARG HUGGINGFACE_HUB_CACHE=/tmp/huggingface/hub
+ARG TMPDIR=/tmp
+
+ENV HF_HOME=${HF_HOME}
+ENV TRANSFORMERS_CACHE=${TRANSFORMERS_CACHE}
+ENV HF_DATASETS_CACHE=${HF_DATASETS_CACHE}
+ENV HUGGINGFACE_HUB_CACHE=${HUGGINGFACE_HUB_CACHE}
+ENV TMPDIR=${TMPDIR}
+
 # install chromium (Architecture : ARM)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -15,7 +28,12 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /usr/lib/chromium \
     && mkdir -p /home/chrome/.cache \
-    && chmod 755 /home/chrome/.cache
+    && chmod 755 /home/chrome/.cache \
+    && mkdir -p ${HF_HOME} \
+    && mkdir -p ${TRANSFORMERS_CACHE} \
+    && mkdir -p ${HF_DATASETS_CACHE} \
+    && mkdir -p ${HUGGINGFACE_HUB_CACHE} \
+    && chmod -R 777 /tmp
 
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
@@ -40,7 +58,8 @@ fi
 # 비root 사용자 생성 및 권한 설정
 RUN groupadd -r appuser && useradd -r -g appuser appuser \
     && chown -R appuser:appuser /app \
-    && chown -R appuser:appuser /home/chrome
+    && chown -R appuser:appuser /home/chrome \
+    && chown -R appuser:appuser /tmp
 
 USER appuser
 

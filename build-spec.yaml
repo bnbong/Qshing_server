@@ -99,6 +99,16 @@ steps:
           REDIS_HOST=${REDIS_HOST}
           REDIS_PORT=${REDIS_PORT}
           REDIS_DB=${REDIS_DB}
+          
+          # Hugging Face cache dir
+          HF_HOME=/tmp/huggingface
+          TRANSFORMERS_CACHE=/tmp/huggingface/transformers
+          HF_DATASETS_CACHE=/tmp/huggingface/datasets
+          HUGGINGFACE_HUB_CACHE=/tmp/huggingface/hub
+          TMPDIR=/tmp
+          
+          # Chrome optimize
+          CHROME_FLAGS=--no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --disable-plugins --disable-images --disable-javascript --memory-pressure-off --max_old_space_size=4096
           EOF
           
           chmod 600 .env
@@ -129,6 +139,11 @@ steps:
       docker buildx inspect --bootstrap
       docker buildx build \
         --platform linux/arm64 \
+        --build-arg HF_HOME=/tmp/huggingface \
+        --build-arg TRANSFORMERS_CACHE=/tmp/huggingface/transformers \
+        --build-arg HF_DATASETS_CACHE=/tmp/huggingface/datasets \
+        --build-arg HUGGINGFACE_HUB_CACHE=/tmp/huggingface/hub \
+        --build-arg TMPDIR=/tmp \
         --load \
         -t new-generated-image \
         .

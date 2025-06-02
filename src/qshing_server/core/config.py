@@ -58,8 +58,8 @@ class Settings(BaseSettings):
         os.path.dirname(__file__), "..", "service", "model", MODEL_NAME
     )
 
-    HTML_LOAD_TIMEOUT: int = 30  # seconds
-    HTML_LOAD_RETRIES: int = 3
+    HTML_LOAD_TIMEOUT: int = int(os.getenv("HTML_LOAD_TIMEOUT", "20"))
+    HTML_LOAD_RETRIES: int = int(os.getenv("HTML_LOAD_RETRIES", "2"))
 
     CHROME_BIN: str = "/usr/bin/chromium"
     CHROMEDRIVER_PATH: str = "/usr/bin/chromedriver"
@@ -68,7 +68,10 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
-    REDIS_CACHE_TTL: int = 86400  # 1일
+    REDIS_CACHE_TTL: int = int(os.getenv("REDIS_CACHE_TTL", "43200"))  # 12시간
+    REDIS_MAX_CONNECTIONS: int = 10
+    REDIS_RETRY_ON_TIMEOUT: bool = True
+    REDIS_SOCKET_TIMEOUT: int = 5
 
     # PostgreSQL
     POSTGRES_USER: str = "admin"
@@ -76,6 +79,8 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "phishing_data"
+    POSTGRES_POOL_SIZE: int = 5
+    POSTGRES_MAX_OVERFLOW: int = 10
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -95,11 +100,20 @@ class Settings(BaseSettings):
     MONGODB_HOST: str = "localhost"
     MONGODB_PORT: int = 27017
     MONGODB_NAME: str = "phishing_feedback"
+    MONGODB_MAX_POOL_SIZE: int = 10
+    MONGODB_MIN_POOL_SIZE: int = 1
+    MONGODB_SERVER_SELECTION_TIMEOUT: int = 5000  # 5초
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def MONGODB_URI(self) -> str:
-        return f"mongodb://{self.MONGODB_USER}:{self.MONGODB_PASSWORD}@{self.MONGODB_HOST}:{self.MONGODB_PORT}/{self.MONGODB_NAME}"
+        return f"mongodb://{self.MONGODB_USER}:{self.MONGODB_PASSWORD}@{self.MONGODB_HOST}:{self.MONGODB_PORT}/{self.MONGODB_NAME}?maxPoolSize={self.MONGODB_MAX_POOL_SIZE}&minPoolSize={self.MONGODB_MIN_POOL_SIZE}&serverSelectionTimeoutMS={self.MONGODB_SERVER_SELECTION_TIMEOUT}"
+
+    MAX_CONCURRENT_REQUESTS: int = 5  # 동시 요청 수
+    MODEL_CACHE_SIZE: int = 1         # 모델 캐시 크기
+    
+    CHROME_PROCESS_TIMEOUT: int = 30
+    CHROME_MAX_INSTANCES: int = 2
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
@@ -115,7 +129,6 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _enforce_non_default_secrets(self) -> Self:
         self._check_default_secret("SECRET_KEY", self.SECRET_KEY)
-
         return self
 
 

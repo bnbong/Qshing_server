@@ -27,6 +27,106 @@ def analyze(
 ) -> Optional[Any]:
     logger.info(f"Analyzing URL: {url}")
 
+    WHITELIST_DOMAINS = [
+        "google.com",
+        "www.google.com", 
+        "amazon.com",
+        "www.amazon.com",
+        "microsoft.com",
+        "www.microsoft.com",
+        "apple.com",
+        "www.apple.com",
+        "facebook.com",
+        "www.facebook.com",
+        "instagram.com",
+        "www.instagram.com",
+        "twitter.com",
+        "www.twitter.com",
+        "linkedin.com",
+        "www.linkedin.com",
+        "github.com",
+        "www.github.com",
+        "stackoverflow.com",
+        "www.stackoverflow.com",
+        "wikipedia.org",
+        "www.wikipedia.org",
+        "youtube.com",
+        "www.youtube.com",
+        "netflix.com",
+        "www.netflix.com",
+        "cnn.com",
+        "www.cnn.com",
+        "edition.cnn.com",
+        "bbc.com",
+        "www.bbc.com",
+        "nytimes.com",
+        "www.nytimes.com",
+        "reddit.com",
+        "www.reddit.com",
+        "chatgpt.com",
+        "www.chatgpt.com",
+        "openai.com",
+        "www.openai.com",
+        "naver.com",
+        "www.naver.com",
+        "daum.net",
+        "www.daum.net",
+        "kakao.com",
+        "www.kakao.com",
+        "samsung.com",
+        "www.samsung.com",
+        "lg.com",
+        "www.lg.com",
+    ]
+    
+    WHITELIST_URLS = [
+        "https://www.google.com",
+        "https://google.com",
+        "https://www.amazon.com",
+        "https://amazon.com",
+        "https://www.microsoft.com",
+        "https://microsoft.com",
+        "https://edition.cnn.com/",
+        "https://chatgpt.com/",
+        "https://www.bbc.com",
+        "https://bbc.com",
+        "https://www.naver.com",
+        "https://naver.com",
+        "https://www.oracle.com",
+        "https://play.google.com/store/apps/details?id=com.k1a2.qshing.qshing_demo"
+    ]
+    
+    normalized_url = url.lower().strip()
+    
+    if normalized_url.startswith("https://"):
+        domain_part = normalized_url[8:]
+    elif normalized_url.startswith("http://"):
+        domain_part = normalized_url[7:]
+    else:
+        domain_part = normalized_url
+    
+    domain_only = domain_part.split('/')[0]
+    
+    if domain_only in WHITELIST_DOMAINS:
+        logger.info(f"URL {url} is in whitelist (domain: {domain_only})")
+        return response_model.model_validate(
+            {
+                "result": False,
+                "confidence": 0.99,
+                "source": "whitelist",
+            }
+        )
+    
+    if normalized_url in WHITELIST_URLS or url in WHITELIST_URLS:
+        logger.info(f"URL {url} is in whitelist (full URL)")
+        return response_model.model_validate(
+            {
+                "result": False,
+                "confidence": 0.99,
+                "source": "whitelist",
+            }
+        )
+
     # 외부에서 DB 매니저가 제공되지 않으면 새로 생성
     if db_manager is None:
         db_manager = DBManager()

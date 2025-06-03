@@ -5,6 +5,8 @@
 # --------------------------------------------------------------------------
 import logging
 import time
+import os
+import uuid
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -27,59 +29,25 @@ class HTMLLoader:
         self.chrome_options.add_argument("--no-sandbox")
         self.chrome_options.add_argument("--disable-dev-shm-usage")
         self.chrome_options.add_argument("--disable-gpu")
-        
-        self.chrome_options.add_argument("--memory-pressure-off")
-        self.chrome_options.add_argument("--max_old_space_size=512")  # 512MB로 제한
-        self.chrome_options.add_argument("--disable-background-timer-throttling")
-        self.chrome_options.add_argument("--disable-renderer-backgrounding")
-        self.chrome_options.add_argument("--disable-backgrounding-occluded-windows")
-        
-        self.chrome_options.add_argument("--disable-extensions")
-        self.chrome_options.add_argument("--disable-plugins")
-        self.chrome_options.add_argument("--disable-images")
-        self.chrome_options.add_argument("--disable-javascript")
-        self.chrome_options.add_argument("--disable-web-security")
-        self.chrome_options.add_argument("--disable-features=TranslateUI")
-        self.chrome_options.add_argument("--disable-ipc-flooding-protection")
-        self.chrome_options.add_argument("--disable-default-apps")
-        self.chrome_options.add_argument("--disable-sync")
-        
-        self.chrome_options.add_argument("--aggressive-cache-discard")
-        self.chrome_options.add_argument("--disable-background-networking")
-        
-        self.chrome_options.add_argument("--window-size=800,600")
-        
-        self.chrome_options.add_argument("--user-data-dir=/tmp/chrome-user-data")
-        self.chrome_options.add_argument("--data-path=/tmp/chrome-data")
-        self.chrome_options.add_argument("--disk-cache-dir=/tmp/chrome-cache")
-        self.chrome_options.add_argument("--disk-cache-size=25000000")  # 25MB
-        
-        self.chrome_options.add_argument("--single-process")
-        self.chrome_options.add_argument("--no-zygote")
-        self.chrome_options.add_argument("--disable-site-isolation-trials")
-        
-        self.chrome_options.add_argument("--disable-features=VizDisplayCompositor")
-        self.chrome_options.add_argument("--disable-logging")
-        self.chrome_options.add_argument("--silent")
-        
         self.driver = None
         self.chromedriver_path = settings.CHROMEDRIVER_PATH
         self.timeout = settings.HTML_LOAD_TIMEOUT
         self.retries = settings.HTML_LOAD_RETRIES
 
     def _init_driver(self) -> bool:
-        try:
+        try:            
             # service = ChromiumService(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
             service = webdriver.ChromeService(executable_path=self.chromedriver_path)
             self.driver = webdriver.Chrome(service=service, options=self.chrome_options)
             self.driver.set_page_load_timeout(self.timeout)
             
-            self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
-                "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-            })
+            # User Agent 설정은 주석 처리 (안정성을 위해)
+            # self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+            #     "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            # })
             
-            # 메모리 사용량 모니터링
-            self.driver.execute_cdp_cmd('Memory.startSampling', {})
+            # 메모리 사용량 모니터링도 주석 처리 (안정성을 위해)
+            # self.driver.execute_cdp_cmd('Memory.startSampling', {})
             
             return True
         except Exception as e:
@@ -144,8 +112,8 @@ class HTMLLoader:
                 logger.warning(f"Attempt {attempt + 1} failed: {e}")
                 if self.driver:
                     try:
-                        # 메모리 정리
-                        self.driver.execute_cdp_cmd('Memory.forciblyPurgeJavaScriptMemory', {})
+                        # 메모리 정리는 주석 처리 (안정성을 위해)
+                        # self.driver.execute_cdp_cmd('Memory.forciblyPurgeJavaScriptMemory', {})
                         self.driver.quit()
                     except Exception:
                         pass
@@ -159,8 +127,8 @@ class HTMLLoader:
     def __del__(self):
         if self.driver:
             try:
-                # 메모리 정리 후 종료
-                self.driver.execute_cdp_cmd('Memory.forciblyPurgeJavaScriptMemory', {})
+                # 메모리 정리는 주석 처리 (안정성을 위해)
+                # self.driver.execute_cdp_cmd('Memory.forciblyPurgeJavaScriptMemory', {})
                 self.driver.quit()
             except Exception:
                 pass

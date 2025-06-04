@@ -94,7 +94,8 @@ def analyze(
         "https://www.naver.com",
         "https://naver.com",
         "https://www.oracle.com",
-        "https://play.google.com/store/apps/details?id=com.k1a2.qshing.qshing_demo"
+        "https://play.google.com/store/apps/details?id=com.k1a2.qshing.qshing_demo",
+        "https://qr.codes/ciY8BM"
     ]
     
     normalized_url = url.lower().strip()

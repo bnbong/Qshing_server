@@ -4,6 +4,7 @@
 # @author bnbong bbbong9@gmail.com
 # --------------------------------------------------------------------------
 import logging
+import time
 from typing import Any, Dict, Optional, Type
 
 from fastapi import Request
@@ -109,6 +110,7 @@ def analyze(
     
     if domain_only in WHITELIST_DOMAINS:
         logger.info(f"URL {url} is in whitelist (domain: {domain_only})")
+        time.sleep(2)
         return response_model.model_validate(
             {
                 "result": False,
@@ -119,6 +121,7 @@ def analyze(
     
     if normalized_url in WHITELIST_URLS or url in WHITELIST_URLS:
         logger.info(f"URL {url} is in whitelist (full URL)")
+        time.sleep(2)
         return response_model.model_validate(
             {
                 "result": False,

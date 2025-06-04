@@ -112,7 +112,7 @@ def analyze(
         return response_model.model_validate(
             {
                 "result": False,
-                "confidence": 0.99,
+                "confidence": 0.01,
                 "source": "whitelist",
             }
         )
@@ -122,7 +122,7 @@ def analyze(
         return response_model.model_validate(
             {
                 "result": False,
-                "confidence": 0.99,
+                "confidence": 0.01,
                 "source": "whitelist",
             }
         )

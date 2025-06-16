@@ -76,24 +76,50 @@ jobs:
           CHROME_FLAGS=--no-sandbox --disable-dev-shm-usage --disable-gpu --disable-extensions --disable-plugins --disable-images --disable-javascript --memory-pressure-off --max_old_space_size=4096
           EOF
           
-          chmod 600 .env
+          chmod 644 .env
           echo ".env file created successfully"
+          ls -la .env
 
       - name: Build Docker Image
         run: |
           COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
           IMAGE_TAG="qshing-server:${COMMIT_SHA}"
           
-          docker buildx build \
+          echo "Building Docker image with tag: ${IMAGE_TAG}"
+          
+          # 첫 번째 빌드 시도
+          if ! docker buildx build \
             --platform linux/arm64 \
             --build-arg HF_HOME=/tmp/huggingface \
             --build-arg TRANSFORMERS_CACHE=/tmp/huggingface/transformers \
             --build-arg HF_DATASETS_CACHE=/tmp/huggingface/datasets \
             --build-arg HUGGINGFACE_HUB_CACHE=/tmp/huggingface/hub \
             --build-arg TMPDIR=/tmp \
+            --no-cache \
             --load \
             -t ${IMAGE_TAG} \
-            .
+            .; then
+            
+            echo "First build attempt failed, retrying with cache reset..."
+            sleep 30
+            
+            # Docker 빌드 캐시 정리
+            docker builder prune -f
+            
+            # 두 번째 시도 - 캐시 없이
+            docker buildx build \
+              --platform linux/arm64 \
+              --build-arg HF_HOME=/tmp/huggingface \
+              --build-arg TRANSFORMERS_CACHE=/tmp/huggingface/transformers \
+              --build-arg HF_DATASETS_CACHE=/tmp/huggingface/datasets \
+              --build-arg HUGGINGFACE_HUB_CACHE=/tmp/huggingface/hub \
+              --build-arg TMPDIR=/tmp \
+              --no-cache \
+              --pull \
+              --load \
+              -t ${IMAGE_TAG} \
+              .
+          fi
           
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
           echo "Built image: ${IMAGE_TAG}"
@@ -102,6 +128,13 @@ jobs:
         run: |
           docker save ${{ env.IMAGE_TAG }} | gzip > qshing-server-image.tar.gz
           echo "Docker image saved to qshing-server-image.tar.gz"
+
+      - name: Verify files before transfer
+        run: |
+          echo "Verifying files before transfer..."
+          ls -la qshing-server-image.tar.gz .env docker-compose.prod.yml
+          echo "File sizes:"
+          du -h qshing-server-image.tar.gz .env docker-compose.prod.yml
 
       - name: Copy files to remote server
         uses: appleboy/scp-action@v0.1.7
@@ -112,6 +145,7 @@ jobs:
           source: "qshing-server-image.tar.gz,.env,docker-compose.prod.yml"
           target: "/home/${{ secrets.REMOTE_USER }}/qshing-server/"
           strip_components: 0
+          overwrite: true
 
       - name: Deploy to remote server
         uses: appleboy/ssh-action@v1.0.3
@@ -121,6 +155,10 @@ jobs:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           script: |
             cd /home/${{ secrets.REMOTE_USER }}/qshing-server/
+            
+            # 파일 권한 설정 (보안을 위해)
+            chmod 600 .env
+            chmod 644 docker-compose.prod.yml
             
             # Load the new Docker image
             echo "Loading Docker image..."

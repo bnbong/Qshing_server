@@ -173,7 +173,7 @@ jobs:
             
             # Stop existing container if running
             echo "Stopping existing containers..."
-            sudo docker-compose -f docker-compose.prod.yml down || true
+            sudo docker compose -f docker-compose.prod.yml down || true
             
             # Remove old images (keep last 3 versions)
             echo "Cleaning up old images..."
@@ -181,7 +181,7 @@ jobs:
             
             # Start the new container
             echo "Starting new containers..."
-            sudo docker-compose -f docker-compose.prod.yml up -d
+            sudo docker compose -f docker-compose.prod.yml up -d
             
             # Clean up the transferred image file
             rm -f qshing-server-image.tar.gz
@@ -191,4 +191,4 @@ jobs:
             # Show running containers and logs
             sudo docker ps
             echo "Recent logs:"
-            sudo docker-compose -f docker-compose.prod.yml logs --tail=20
+            sudo docker compose -f docker-compose.prod.yml logs --tail=20

@@ -15,16 +15,38 @@ ENV HF_DATASETS_CACHE=${HF_DATASETS_CACHE}
 ENV HUGGINGFACE_HUB_CACHE=${HUGGINGFACE_HUB_CACHE}
 ENV TMPDIR=${TMPDIR}
 
-# install chromium (Architecture : ARM)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+# 기본 패키지 설치 (안정성을 위해 재시도 로직 포함)
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get update --fix-missing && \
+    (apt-get install -y --no-install-recommends --fix-missing \
     wget \
     gnupg \
     apt-transport-https \
     ca-certificates \
+    curl \
+    || (sleep 10 && apt-get update && apt-get install -y --no-install-recommends --fix-missing \
+    wget \
+    gnupg \
+    apt-transport-https \
+    ca-certificates \
+    curl)) && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Chromium 설치 - 재시도 로직과 함께
+RUN apt-get update && \
+    (apt-get install -y --no-install-recommends \
     chromium \
     chromium-driver \
-    && apt-get clean
+    || (echo "First attempt failed, retrying..." && sleep 10 && \
+        apt-get clean && \
+        apt-get update --fix-missing && \
+        apt-get install -y --no-install-recommends --fix-missing \
+        chromium \
+        chromium-driver)) && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
